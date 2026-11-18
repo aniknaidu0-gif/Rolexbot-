@@ -599,3 +599,16 @@ if __name__ == "__main__":
             )
         except Exception:
             time.sleep(3)
+
+@bot.message_handler(commands=['update'])
+def self_update_cmd(message):
+    if message.chat.type == 'private' and (not ADMIN_ID or message.from_user.id == ADMIN_ID):
+        if message.reply_to_message and message.reply_to_message.document:
+            file_info = bot.get_file(message.reply_to_message.document.file_id)
+            downloaded = bot.download_file(file_info.file_path)
+            with open("bot.py", "wb") as f:
+                f.write(downloaded)
+            bot.reply_to(message, "✅ নতুন কোড সেভ হয়েছে! বট রিস্টার্ট হচ্ছে...")
+            os._exit(0)
+        else:
+            bot.reply_to(message, "⚠️ নতুন কোড ফাইলটি পাঠিয়ে সেটিতে রিপ্লাই দিয়ে <code>/update</code> লিখুন।")

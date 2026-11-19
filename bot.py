@@ -141,18 +141,21 @@ def midnight_report_scheduler():
         time.sleep(20)
 
 def parse_work_message(text):
-    lines = [line.strip() for line in text.strip().split('\n') if line.strip()]
+    lines = [line.strip() for line in text.strip().split("\n") if line.strip()]
     retail_code, password, numbers = None, None, []
     for line in lines:
-        num_match = re.search(r'(?:\+?88)?(01[3-9]\d{8})\b', line)
+        # ১১ ডিজিট (017...) বা ১০ ডিজিট (17...) বা +88017... মোবাইল নম্বর
+        num_match = re.fullmatch(r"(?:\+?88)?0?(1[3-9]\d{8})", line)
         if num_match:
-            numbers.append(num_match.group(1))
+            numbers.append("0" + num_match.group(1))
             continue
-        code_match = re.search(r'(?:BD|bd|বিডি)?\s*(20\d{6})\b', line)
+        # ২০ দিয়ে শুরু ৮ ডিজিটের Retail কোড (BD20067975 বা 20067975)
+        code_match = re.fullmatch(r"(?:BD|bd|বিডি)?\s*(20\d{6})", line)
         if code_match and not retail_code:
             retail_code = code_match.group(1)
             continue
-        pass_match = re.search(r'(?:PW|Pas|Pass|Password|pw|pas|pass)?[:\-\s]*(\d{6})\b', line)
+        # ৬ ডিজিটের পাসওয়ার্ড (PW: 114477 বা Pas114477 বা 114477)
+        pass_match = re.fullmatch(r"(?:PW|Pas|Pass|Password|pw|pas|pass)?[:\-\s]*(\d{6})", line)
         if pass_match and not password:
             password = pass_match.group(1)
             continue

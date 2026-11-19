@@ -141,24 +141,24 @@ def midnight_report_scheduler():
         time.sleep(20)
 
 def parse_work_message(text):
-    lines = [line.strip() for line in text.strip().split("\n") if line.strip()]
-    retail_code, password, numbers = None, None, []
-    for line in lines:
-        # ১১ ডিজিট (017...) বা ১০ ডিজিট (17...) বা +88017... মোবাইল নম্বর
-        num_match = re.fullmatch(r"(?:\+?88)?0?(1[3-9]\d{8})", line)
-        if num_match:
-            numbers.append("0" + num_match.group(1))
-            continue
-        # ২০ দিয়ে শুরু ৮ ডিজিটের Retail কোড (BD20067975 বা 20067975)
-        code_match = re.fullmatch(r"(?:BD|bd|বিডি)?\s*(20\d{6})", line)
-        if code_match and not retail_code:
-            retail_code = code_match.group(1)
-            continue
-        # ৬ ডিজিটের পাসওয়ার্ড (PW: 114477 বা Pas114477 বা 114477)
-        pass_match = re.fullmatch(r"(?:PW|Pas|Pass|Password|pw|pas|pass)?[:\-\s]*(\d{6})", line)
-        if pass_match and not password:
-            password = pass_match.group(1)
-            continue
+    # মেসেজের ভেতর থেকে সব আলাদা সংখ্যা খুঁজে বের করা (যেকোনো চিহ্ন বা লেখার পাশ থেকে)
+    tokens = re.findall(r"\d+", text)
+    retail_code = None
+    password = None
+    numbers = []
+
+    for num in tokens:
+        if len(num) == 8 and not retail_code:
+            retail_code = num
+        elif len(num) == 6 and not password:
+            password = num
+        elif len(num) == 10:
+            numbers.append("0" + num)
+        elif len(num) == 11:
+            numbers.append(num)
+        elif len(num) == 13 and num.startswith("88"):
+            numbers.append(num[2:])
+
     return retail_code, password, numbers
 
 @bot.message_handler(commands=['start'])
